@@ -1,5 +1,5 @@
 #!/bin/bash
-if [[ $@ == **-h** ]]
+if [[ $@ == **-h** ]] || [[ $# == 0 ]]
 then
     printf "usage:\n\ttugshuttle loc#\n\nwith loc# in:\n\tams{1,2,3}, fra1, lon1, nyc{1,2,3}, sfo1, sgp1, tor1\n"
     exit
@@ -52,8 +52,8 @@ fi
 keyID=$(cat ~/.tugboat | grep ssh_key: | sed -e "s/.*ssh_key://")
 
 tugboat create -r $1 -s 512mb -i ubuntu-14-04-x64 -k $keyID tugshuttle-to-$1
-tugboat wait temp-tunnel-to-$1 --state active
-IPtunnel=$(tugboat info temp-tunnel-to-$1 | grep IP4: | sed s/IP4:// | tr -d '[[:space:]]')
+tugboat wait tugshuttle-to-$1 --state active
+IPtunnel=$(tugboat info tugshuttle-to-$1 | grep IP4: | sed s/IP4:// | tr -d '[[:space:]]')
 printf "\nIP of server: $IPtunnel\n\n"
 keyscanout=''
 while [ -z "$keyscanout" ]
