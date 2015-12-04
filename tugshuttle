@@ -1,5 +1,5 @@
 #!/bin/bash
-if [[ $@ == **-h** ]] || [[ $# == 0 ]]
+if [[ $@ == **-h** ]] 
 then
     printf "usage:\n\ttugshuttle loc#\n\nwith loc# in:\n\tams{1,2,3}, fra1, lon1, nyc{1,2,3}, sfo1, sgp1, tor1\n"
     exit
@@ -46,6 +46,12 @@ then
     sed -e "s/ssh_key:.*/ssh_key:\ $keyID/" ~/.tugboat > ~/.tugboat.tmp && mv ~/.tugboat.tmp ~/.tugboat
     
     printf "\nChanges written to ~/.tugboat\nIf any values are incorrect or change, edit ~/.tugboat.\n\n"
+fi
+
+if [[ $# == 0 ]]
+then
+    printf "usage:\n\ttugshuttle loc#\n\nwith loc# in:\n\tams{1,2,3}, fra1, lon1, nyc{1,2,3}, sfo1, sgp1, tor1\n"
+    exit
 fi
 
 keyID=$(cat ~/.tugboat | grep ssh_key: | sed -e "s/.*ssh_key://")
