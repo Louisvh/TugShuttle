@@ -1,0 +1,66 @@
+#!/bin/bash
+if [[ $@ == **-h** ]]
+then
+    printf "usage:\n\ttugshuttle loc#\n\nwith loc# in:\n\tams{1,2,3}, fra1, lon1, nyc{1,2,3}, sfo1, sgp1, tor1\n"
+    exit
+fi
+
+#first set-up in case tugboat isn't configured
+if [ ! -z "$(tugboat info | grep authorize)" ] || [ ! -z "$(tugboat droplets | grep from\ API:\ unauthorized)"  ]
+then
+    printf "Tugboat could not find a valid (read/write) DigitalOcean Access Token.\nYou can get an Access Token from "
+    printf "https://cloud.digitalocean.com/settings/tokens/new\n\nEnter your access token: "
+    read acctoken
+    if [ -e ~/.tugboat ]; then mv ~/.tugboat ~/.tugboat.bak; printf "Existing .tugboat settings stored in .tugboat.bak\n\n"; fi
+    printf "%s\n%s\n%s\n" "---" "authentication:" "  access_token: $acctoken" > ~/.tugboat
+    printf "%s\n%s\n%s\n%s\n" "ssh:" "  ssh_user: root" "  ssh_key_path: ~/.ssh/id_rsa" "  ssh_port: '22'" >> ~/.tugboat
+    printf "%s\n%s\n%s\n%s\n" "defaults:" "  region: lon1" "  image: ubuntu-14-04-x64" "  size: 512mb" >> ~/.tugboat
+    printf "%s\n%s\n%s\n" "  ssh_key: ''" "  private_networking: 'false'" "  backups_enabled: 'false'" >> ~/.tugboat
+    
+    #correct token if invalid
+    validAuth=''
+    while [ -z "$validAuth" ]
+    do
+        if [ ! -z "$(tugboat droplets 2>/dev/null | grep from\ API:\ unauthorized)" ]
+        then
+            printf "\n    (!) Access Token invalid.\n\nYou can get an Access Token from "
+            printf "https://cloud.digitalocean.com/settings/tokens/new\n\nEnter your access token: "
+            read acctoken
+            sed -e "s/access_token:.*/access_token:\ $acctoken/" .tugboat > .tugboat.tmp && mv .tugboat.tmp .tugboat
+        else
+            validAuth='success'
+        fi
+    done
+
+    while [ -z "$(tugboat keys 2>/dev/null | grep id:)" ]
+    do
+        printf "\n%s\n" "No SSH keys linked to this DO account."
+        printf "%s\n\n" "Add your public key at https://cloud.digitalocean.com/settings/security"
+        read -p "Press [Enter] when done"
+    done
+    
+    printf "Choose a linked SSH key:\n\n"
+    printf "$(tugboat keys 2>/dev/null | grep id: | grep -nT Name | sed -e s/,\ fingerprint:.*//)\n\n"
+    read -p "Enter [1/2/3/...]"
+    keyID="$(tugboat keys 2>/dev/null | grep id: | grep -nT Name | sed -e s/,\ fingerprint:.*// | sed -n "$REPLY""p" |\
+         sed -e s/.*id:\ // | sed -e "s/)//" )"
+    sed -e "s/ssh_key:.*/ssh_key:\ $keyID/" .tugboat > .tugboat.tmp && mv .tugboat.tmp .tugboat
+    
+    printf "\nChanges written to ~/.tugboat\nIf any values are incorrect or change, edit ~/.tugboat.\n\n"
+fi
+
+keyID=$(cat .tugboat | grep ssh_key: | sed -e "s/.*ssh_key://")
+
+tugboat create -r $1 -s 512mb -i ubuntu-14-04-x64 -k $keyID tugshuttle-to-$1
+tugboat wait temp-tunnel-to-$1 --state active
+IPtunnel=$(tugboat info temp-tunnel-to-$1 | grep IP4: | sed s/IP4:// | tr -d '[[:space:]]')
+printf "\nIP of server: $IPtunnel\n\n"
+keyscanout=''
+while [ -z "$keyscanout" ]
+do
+    sleep 2
+    keyscanout=$(ssh-keyscan $IPtunnel 2>&1 >> ~/.ssh/known_hosts)
+    printf "Attempting to add server to known host\n\n"
+done
+sshuttle -r root@$IPtunnel 0.0.0.0/0 -vv
+tugboat destroy tugshuttle-to-$1
