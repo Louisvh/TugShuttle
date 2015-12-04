@@ -68,4 +68,4 @@ do
     printf "Attempting to add server to known host\n\n"
 done
 sshuttle -r root@$IPtunnel 0.0.0.0/0 -vv
-tugboat destroy tugshuttle-to-$1
+yes | tugboat destroy tugshuttle-to-$1
