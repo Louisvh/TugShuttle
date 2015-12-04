@@ -11,7 +11,7 @@ then
     printf "Tugboat could not find a valid (read/write) DigitalOcean Access Token.\nYou can get an Access Token from "
     printf "https://cloud.digitalocean.com/settings/tokens/new\n\nEnter your access token: "
     read acctoken
-    if [ -e ~/.tugboat ]; then mv ~/.tugboat ~/.tugboat.bak; printf "Existing .tugboat settings stored in .tugboat.bak\n\n"; fi
+    if [ -e ~/.tugboat ]; then mv ~/.tugboat ~/.tugboat.bak; printf "Existing ~/.tugboat settings stored in ~/.tugboat.bak\n\n"; fi
     printf "%s\n%s\n%s\n" "---" "authentication:" "  access_token: $acctoken" > ~/.tugboat
     printf "%s\n%s\n%s\n%s\n" "ssh:" "  ssh_user: root" "  ssh_key_path: ~/.ssh/id_rsa" "  ssh_port: '22'" >> ~/.tugboat
     printf "%s\n%s\n%s\n%s\n" "defaults:" "  region: lon1" "  image: ubuntu-14-04-x64" "  size: 512mb" >> ~/.tugboat
@@ -26,7 +26,7 @@ then
             printf "\n    (!) Access Token invalid.\n\nYou can get an Access Token from "
             printf "https://cloud.digitalocean.com/settings/tokens/new\n\nEnter your access token: "
             read acctoken
-            sed -e "s/access_token:.*/access_token:\ $acctoken/" .tugboat > .tugboat.tmp && mv .tugboat.tmp .tugboat
+            sed -e "s/access_token:.*/access_token:\ $acctoken/" ~/.tugboat > ~/.tugboat.tmp && mv ~/.tugboat.tmp ~/.tugboat
         else
             validAuth='success'
         fi
@@ -44,12 +44,12 @@ then
     read -p "Enter [1/2/3/...]"
     keyID="$(tugboat keys 2>/dev/null | grep id: | grep -nT Name | sed -e s/,\ fingerprint:.*// | sed -n "$REPLY""p" |\
          sed -e s/.*id:\ // | sed -e "s/)//" )"
-    sed -e "s/ssh_key:.*/ssh_key:\ $keyID/" .tugboat > .tugboat.tmp && mv .tugboat.tmp .tugboat
+    sed -e "s/ssh_key:.*/ssh_key:\ $keyID/" ~/.tugboat > ~/.tugboat.tmp && mv ~/.tugboat.tmp ~/.tugboat
     
     printf "\nChanges written to ~/.tugboat\nIf any values are incorrect or change, edit ~/.tugboat.\n\n"
 fi
 
-keyID=$(cat .tugboat | grep ssh_key: | sed -e "s/.*ssh_key://")
+keyID=$(cat ~/.tugboat | grep ssh_key: | sed -e "s/.*ssh_key://")
 
 tugboat create -r $1 -s 512mb -i ubuntu-14-04-x64 -k $keyID tugshuttle-to-$1
 tugboat wait temp-tunnel-to-$1 --state active
