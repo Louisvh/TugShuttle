@@ -39,9 +39,8 @@ then
         read -p "Press [Enter] when done"
     done
     
-    printf "Choose a linked SSH key:\n\n"
-    printf "$(tugboat keys 2>/dev/null | grep id: | grep -nT Name | sed -e s/,\ fingerprint:.*//)\n\n"
-    read -p "Enter [1/2/3/...]"
+    printf "\n\n$(tugboat keys 2>/dev/null | grep id: | grep -nT Name | sed -e s/,\ fingerprint:.*//)\n\n"
+    read -p "Choose a linked SSH key ["1", "2", "3", ...] "
     keyID="$(tugboat keys 2>/dev/null | grep id: | grep -nT Name | sed -e s/,\ fingerprint:.*// | sed -n "$REPLY""p" |\
          sed -e s/.*id:\ // | sed -e "s/)//" )"
     sed -e "s/ssh_key:.*/ssh_key:\ $keyID/" ~/.tugboat > ~/.tugboat.tmp && mv ~/.tugboat.tmp ~/.tugboat
