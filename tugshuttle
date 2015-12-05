@@ -26,10 +26,17 @@
 #                                                                                   #
 #####################################################################################
 
+show_help() {
+    printf "usage:\n\ttugshuttle loc#\n\nwith loc# in:\n\tams{1,2,3}, fra1, lon1, nyc{1,2,3}, sfo1, sgp1, tor1\n"
+    printf "\nIf the Tugshuttle process receives a SIGKILL while it is running,\nit will not be able to clean up the Droplet. "
+    printf "You will be billed \nDigitalOcean credit for Droplets that are not destroyed.\n"
+    printf "To clean up lingering Tugshuttle Droplets, run:\n\n\ttugshuttle clean\n"
+    exit
+}
+
 if [[ $@ == **-h** ]] 
 then
-    printf "usage:\n\ttugshuttle loc#\n\nwith loc# in:\n\tams{1,2,3}, fra1, lon1, nyc{1,2,3}, sfo1, sgp1, tor1\n"
-    exit
+    show_help
 fi
 
 #first set-up in case tugboat isn't configured
@@ -75,15 +82,44 @@ then
     printf "\nChanges written to ~/.tugboat\nIf any values are incorrect or change, edit ~/.tugboat.\n\n"
 fi
 
+clean_up_droplets() {
+    if [[ -z "$(tugboat droplets | grep tugshuttle-to-)" ]]
+    then
+        printf "\nNo more Tugshuttle Droplets found!\n"
+    else
+        tugboat destroy tugshuttle-to-
+        printf "\nConfirming deletion"
+        for loopvar in `seq 1 10`;
+        do
+            printf "."
+            sleep 1
+        done
+        printf ".\n"
+        printf "\nOne Tugshuttle Droplet deleted!\n"
+        clean_up_droplets
+    fi
+    exit
+}
+
+if [[  $@ == **clean** ]]
+then
+    clean_up_droplets
+    exit
+fi    
+
 if [[ $# == 0 ]]
 then
-    printf "usage:\n\ttugshuttle loc#\n\nwith loc# in:\n\tams{1,2,3}, fra1, lon1, nyc{1,2,3}, sfo1, sgp1, tor1\n"
-    exit
+    show_help
 fi
 
 keyID=$(cat ~/.tugboat | grep ssh_key: | sed -e "s/.*ssh_key://")
 
-tugboat create -r $1 -s 512mb -i ubuntu-14-04-x64 -k $keyID tugshuttle-to-$1
+if [[ -z "$(tugboat droplets | grep tugshuttle-to-$1)" ]]
+then
+    tugboat create -r $1 -s 512mb -i ubuntu-14-04-x64 -k $keyID tugshuttle-to-$1
+else
+    printf "\nExisting Droplet found in $1. Using that one...\n"
+fi
 tugboat wait tugshuttle-to-$1 --state active
 IPtunnel=$(tugboat info tugshuttle-to-$1 | grep IP4: | sed s/IP4:// | tr -d '[[:space:]]')
 printf "\nIP of server: $IPtunnel\n\n"
