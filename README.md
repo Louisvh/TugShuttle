@@ -22,5 +22,11 @@ Clone the repository and put "tugshuttle" in any folder in your $PATH.
 ## Usage
 `tugshuttle $server`, where $server is one of: `ams1`, `ams2`, `ams3`, `fra1`, `lon1`, `nyc1`, `nyc2`, `nyc3`, `sfo1`, `sgp1`, `tor1`. This connects you to a server in Amsterdam, Frankfurt, New York City, San Francisco, Singapore or Toronto respectively.
 
+When Tugshuttle is first run and ~/.tugboat is not present / properly configured, the program will ask for an Access Token. You can find it [here](https://cloud.digitalocean.com/settings/tokens/new). 
+
+If no SSH key is linked to your DigitalOcean account, Tugshuttle will ask you to do that before continuing. You can link your SSH key [here](https://cloud.digitalocean.com/settings/security). If you've never used SSH keys before, read about how to generate and use them [here](https://help.github.com/articles/generating-ssh-keys/).
+
+**Important:** If Tugshuttle receives a SIGKILL, it will not be able to destroy the Droplet it created. If this happens, the Droplet will run until you manually destroy it. You can either do this via the DO website, using `tugboat destroy tugshuttle` or using `tugshuttle clean`. 
+
 ## License
 :[MIT LICENSE](LICENSE)
