@@ -34,10 +34,88 @@ show_help() {
     exit
 }
 
-if [[ $@ == **-h** ]] 
+show_defaults () {
+if [ ! -f "/home/$USER/.tugboat" ];
 then
-    show_help
+    echo "Default values are stored in ~/.tugboat and this file doesn't exist!"
+    echo
+    echo "Either run tugshuttle or tugboat at least once to generate a ~/.tugboat file."
+    exit 0
+else
+    echo "Default tugboat values:"
+    echo
+    echo "Region:                $(grep "region:" ~/.tugboat | sed "s@^.*region: @@")"
+    echo "SSH Key:                $(grep "ssh_key_path:" ~/.tugboat | sed "s@^.*ssh_key_path: @@")"
+    echo
+    echo "Digital Ocean Access Token:"
+    echo "$(grep "access_token" ~/.tugboat | sed "s@^.*access_token: @@")"
+    echo
+    echo "Change these values by editing ~/.tugboat"
+    exit 0
 fi
+}
+
+list_regions() {
+
+echo "Please select a region for the Droplet:"
+echo
+PS3="==> "
+do_regions=("tams1" "tams2" "tams3" "fra1" "lon1" "nyc1" "nyc2" "nyc3" "sfo1" "sgp1" "tor1")
+
+select opt in "${do_regions[@]}" "Help" "Quit";
+do
+    if (( REPLY == 2 + ${#do_regions[@]} )) ; then
+        echo "Bye ..."
+        exit 0
+
+    elif (( REPLY == 1 + ${#do_regions[@]} )) ; then
+        show_help
+        exit 0
+
+    elif (( REPLY > 0 && REPLY <= ${#do_regions[@]} )) ; then
+        echo
+        echo ""$opt" selected."
+        region="$opt"
+        break       
+    else
+        echo "Invalid option."
+    fi
+done
+}
+
+while [[ $# > 0 ]]
+do
+key="$1"
+case $key in
+    -r|--region)
+    region="$2"
+    shift
+    ;;
+    -h|--help)
+    show_help
+    ;;
+    -c|--clean|clean)
+    clean_up_droplets
+    exit 0
+    ;;
+    --defaults|--default)
+    show_defaults
+    ;;
+    -*)
+    echo "Error: Unknown option: $1" >&2
+    show_help
+    exit 0
+    ;;
+    tams1|tams2|tams3|fra1|lon1|nyc1|nyc2|nyc3|sfo1|sgp1|tor1)
+    region="$key"
+    ;;
+    *)
+    echo "Unrecognized region or option: ${key}"
+    list_regions
+    ;;
+esac
+shift
+done
 
 #first set-up in case tugboat isn't configured
 if [ ! -z "$(tugboat info | grep authorize)" ] || [ ! -z "$(tugboat droplets | grep from\ API:\ unauthorized)"  ]
@@ -101,27 +179,16 @@ clean_up_droplets() {
     exit
 }
 
-if [[  $@ == **clean** ]]
-then
-    clean_up_droplets
-    exit
-fi    
-
-if [[ $# == 0 ]]
-then
-    show_help
-fi
-
 keyID=$(cat ~/.tugboat | grep ssh_key: | sed -e "s/.*ssh_key://")
 
-if [[ -z "$(tugboat droplets | grep tugshuttle-to-$1)" ]]
+if [[ -z "$(tugboat droplets | grep tugshuttle-to-$region)" ]]
 then
-    tugboat create -r $1 -s 512mb -i ubuntu-14-04-x64 -k $keyID tugshuttle-to-$1
+    tugboat create -r $region -s 512mb -i ubuntu-14-04-x64 -k $keyID tugshuttle-to-$region
 else
-    printf "\nExisting Droplet found in $1. Using that one...\n"
+    printf "\nExisting Droplet found in $region. Using that one...\n"
 fi
-tugboat wait tugshuttle-to-$1 --state active
-IPtunnel=$(tugboat info tugshuttle-to-$1 | grep IP4: | sed s/IP4:// | tr -d '[[:space:]]')
+tugboat wait tugshuttle-to-$region --state active
+IPtunnel=$(tugboat info tugshuttle-to-$region | grep IP4: | sed s/IP4:// | tr -d '[[:space:]]')
 printf "\nIP of server: $IPtunnel\n\n"
 keyscanout=''
 while [ -z "$keyscanout" ]
@@ -131,4 +198,4 @@ do
     printf "Attempting to add server to known host\n\n"
 done
 sshuttle -r root@$IPtunnel 0.0.0.0/0 -vv
-yes | tugboat destroy tugshuttle-to-$1
+yes | tugboat destroy tugshuttle-to-$region
