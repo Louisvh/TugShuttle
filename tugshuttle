@@ -27,7 +27,7 @@
 #####################################################################################
 
 show_help() {
-    printf "usage:\n\ttugshuttle loc#\n\nwith loc# in:\n\tams{1,2,3}, fra1, lon1, nyc{1,2,3}, sfo1, sgp1, tor1\n"
+    printf "usage:\n\ttugshuttle loc#\n\nwith loc# in:\n\tams1, ams2, ams3, fra1, lon1, nyc1, nyc2, nyc3, sfo1, sgp1, tor1\n"
     printf "\nIf the Tugshuttle process receives a SIGKILL while it is running,\nit will not be able to clean up the Droplet. "
     printf "You will be billed \nDigitalOcean credit for Droplets that are not destroyed.\n"
     printf "To clean up lingering Tugshuttle Droplets, run:\n\n\ttugshuttle clean\n"
