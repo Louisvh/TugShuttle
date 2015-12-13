@@ -34,6 +34,14 @@ show_help() {
     exit
 }
 
+if [[ $# = 0 ]];
+    then
+    show_help
+    exit 1
+else
+    :
+fi
+
 show_defaults () {
 if [ ! -f "/home/$USER/.tugboat" ];
 then
