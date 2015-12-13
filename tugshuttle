@@ -78,7 +78,7 @@ list_regions() {
 echo "Please select a region for the Droplet:"
 echo
 PS3="==> "
-do_regions=("tams1" "tams2" "tams3" "fra1" "lon1" "nyc1" "nyc2" "nyc3" "sfo1" "sgp1" "tor1")
+do_regions=("ams1" "ams2" "ams3" "fra1" "lon1" "nyc1" "nyc2" "nyc3" "sfo1" "sgp1" "tor1")
 
 select opt in "${do_regions[@]}" "Help" "Quit";
 do
