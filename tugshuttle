@@ -31,16 +31,7 @@ show_help() {
     printf "\nIf the Tugshuttle process receives a SIGKILL while it is running,\nit will not be able to clean up the Droplet. "
     printf "You will be billed \nDigitalOcean credit for Droplets that are not destroyed.\n"
     printf "To clean up lingering Tugshuttle Droplets, run:\n\n\ttugshuttle clean\n"
-    exit
 }
-
-if [[ $# = 0 ]];
-    then
-    show_help
-    exit 1
-else
-    :
-fi
 
 show_defaults () {
 if [ ! -f "/home/$USER/.tugboat" ];
@@ -61,6 +52,25 @@ else
     echo "Change these values by editing ~/.tugboat"
     exit 0
 fi
+}
+
+clean_up_droplets() {
+    if [[ -z "$(tugboat droplets | grep tugshuttle-to-)" ]]
+    then
+        printf "\nNo more Tugshuttle Droplets found!\n"
+    else
+        tugboat destroy tugshuttle-to-
+        printf "\nConfirming deletion"
+        for loopvar in `seq 1 10`;
+        do
+            printf "."
+            sleep 1
+        done
+        printf ".\n"
+        printf "\nOne Tugshuttle Droplet deleted!\n"
+        clean_up_droplets
+    fi
+    exit
 }
 
 list_regions() {
@@ -91,6 +101,13 @@ do
 done
 }
 
+if [[ ! $# > 0 ]]
+then
+    show_help
+    printf "\n\nAssuming you want to start a tunnel...\n"
+    list_regions
+fi
+
 while [[ $# > 0 ]]
 do
 key="$1"
@@ -101,6 +118,7 @@ case $key in
     ;;
     -h|--help)
     show_help
+    exit 0
     ;;
     -c|--clean|clean)
     clean_up_droplets
@@ -168,24 +186,6 @@ then
     printf "\nChanges written to ~/.tugboat\nIf any values are incorrect or change, edit ~/.tugboat.\n\n"
 fi
 
-clean_up_droplets() {
-    if [[ -z "$(tugboat droplets | grep tugshuttle-to-)" ]]
-    then
-        printf "\nNo more Tugshuttle Droplets found!\n"
-    else
-        tugboat destroy tugshuttle-to-
-        printf "\nConfirming deletion"
-        for loopvar in `seq 1 10`;
-        do
-            printf "."
-            sleep 1
-        done
-        printf ".\n"
-        printf "\nOne Tugshuttle Droplet deleted!\n"
-        clean_up_droplets
-    fi
-    exit
-}
 
 keyID=$(cat ~/.tugboat | grep ssh_key: | sed -e "s/.*ssh_key://")
 
