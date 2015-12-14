@@ -78,12 +78,17 @@ list_regions() {
 echo "Please select a region for the Droplet:"
 echo
 PS3="==> "
-do_regions=("ams1" "ams2" "ams3" "fra1" "lon1" "nyc1" "nyc2" "nyc3" "sfo1" "sgp1" "tor1")
+do_regions=($(tugboat regions | grep slug |sed -e "s/.*slug:\ //" | tr ')' ' '))
+if [[ -z "$do_regions" ]]
+then
+    do_regions=("ams1" "ams2" "ams3" "fra1" "lon1" "nyc1" "nyc2" "nyc3" "sfo1" "sgp1" "tor1")
+fi
 
 select opt in "${do_regions[@]}" "Help" "Quit";
 do
+    printf "%s\n\n\n" "-------------------------------------------"
     if (( REPLY == 2 + ${#do_regions[@]} )) ; then
-        echo "Bye ..."
+        echo "No Tunnel created."
         exit 0
 
     elif (( REPLY == 1 + ${#do_regions[@]} )) ; then
@@ -100,48 +105,6 @@ do
     fi
 done
 }
-
-if [[ ! $# > 0 ]]
-then
-    show_help
-    printf "\n\nAssuming you want to start a tunnel...\n"
-    list_regions
-fi
-
-while [[ $# > 0 ]]
-do
-key="$1"
-case $key in
-    -r|--region)
-    region="$2"
-    shift
-    ;;
-    -h|--help)
-    show_help
-    exit 0
-    ;;
-    -c|--clean|clean)
-    clean_up_droplets
-    exit 0
-    ;;
-    --defaults|--default)
-    show_defaults
-    ;;
-    -*)
-    echo "Error: Unknown option: $1" >&2
-    show_help
-    exit 0
-    ;;
-    tams1|tams2|tams3|fra1|lon1|nyc1|nyc2|nyc3|sfo1|sgp1|tor1)
-    region="$key"
-    ;;
-    *)
-    echo "Unrecognized region or option: ${key}"
-    list_regions
-    ;;
-esac
-shift
-done
 
 #first set-up in case tugboat isn't configured
 if [ ! -z "$(tugboat info | grep authorize)" ] || [ ! -z "$(tugboat droplets | grep from\ API:\ unauthorized)"  ]
@@ -185,6 +148,49 @@ then
     
     printf "\nChanges written to ~/.tugboat\nIf any values are incorrect or change, edit ~/.tugboat.\n\n"
 fi
+
+if [[ ! $# > 0 ]]
+then
+    show_help
+    printf "\n%s" "-------------------------------------------------"
+    printf "\n\nAssuming you want to start a tunnel...\n"
+    list_regions
+fi
+
+while [[ $# > 0 ]]
+do
+key="$1"
+case $key in
+    -r|--region)
+    region="$2"
+    shift
+    ;;
+    -h|--help)
+    show_help
+    exit 0
+    ;;
+    -c|--clean|clean)
+    clean_up_droplets
+    exit 0
+    ;;
+    --defaults|--default)
+    show_defaults
+    ;;
+    -*)
+    echo "Error: Unknown option: $1" >&2
+    show_help
+    exit 0
+    ;;
+    tams1|tams2|tams3|fra1|lon1|nyc1|nyc2|nyc3|sfo1|sgp1|tor1)
+    region="$key"
+    ;;
+    *)
+    echo "Unrecognized region or option: ${key}"
+    list_regions
+    ;;
+esac
+shift
+done
 
 
 keyID=$(cat ~/.tugboat | grep ssh_key: | sed -e "s/.*ssh_key://")
