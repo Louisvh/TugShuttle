@@ -10,7 +10,7 @@ VPNs have many valid use cases and can be quite convenient at times, but they te
 ## Prerequisites / Dependencies
 1) A DigitalOcean account with some credit. Renting a Droplet is very cheap, but it's not free. If you don't have one, you can make an account [here](https://www.digitalocean.com/?refcode=433d02d1a833) (note: this is a referral link, meaning you get $10 starting credit. If you don't feel comfortable using that, you can sign up on the non-referral page [here](https://cloud.digitalocean.com/registrations/new))
 
-2) A valid SSH key linked to your DigitalOcean account. You can link one [here](https://cloud.digitalocean.com/settings/security). If you've never used SSH keys before, learn how to create them [here](help.github.com/articles/generating-ssh-keys/).
+2) A valid SSH key linked to your DigitalOcean account. You can link one [here](https://cloud.digitalocean.com/settings/security). If you've never used SSH keys before, learn how to create them [here](https://help.github.com/articles/generating-ssh-keys/).
 
 3) Sshuttle. It's in the repositories. You can also grab it from the [Github page](https://github.com/apenwarr/sshuttle).
 
