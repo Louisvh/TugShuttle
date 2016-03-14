@@ -193,7 +193,7 @@ shift
 done
 
 
-keyID=$(cat ~/.tugboat | grep ssh_key: | sed -e "s/.*ssh_key://")
+keyID=$(cat ~/.tugboat | grep ssh_key: | sed -e "s/.*ssh_key://" -e "s/'//g")
 
 if [[ -z "$(tugboat droplets | grep tugshuttle-to-$region)" ]]
 then
