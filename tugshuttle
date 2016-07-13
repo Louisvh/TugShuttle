@@ -4,7 +4,7 @@
 #                                                                                   #
 # The MIT License (MIT)                                                             #
 #                                                                                   #
-# Copyright (c) 2015 Louis van Harten                                               #
+# Copyright (c) 2016 Louis van Harten                                               #
 #                                                                                   #
 # Permission is hereby granted, free of charge, to any person obtaining a copy      #
 # of this software and associated documentation files (the "Software"), to deal     #
@@ -81,7 +81,7 @@ PS3="==> "
 do_regions=($(tugboat regions | grep slug |sed -e "s/.*slug:\ //" | tr ')' ' '))
 if [[ -z "$do_regions" ]]
 then
-    do_regions=("ams1" "ams2" "ams3" "fra1" "lon1" "nyc1" "nyc2" "nyc3" "sfo1" "sgp1" "tor1")
+    do_regions=("ams2" "ams3" "blr1" "fra1" "lon1" "nyc1" "nyc2" "nyc3" "sfo1" "sfo2" "sgp1" "tor1")
 fi
 
 select opt in "${do_regions[@]}" "Help" "Quit";
@@ -181,7 +181,7 @@ case $key in
     show_help
     exit 0
     ;;
-    tams1|tams2|tams3|fra1|lon1|nyc1|nyc2|nyc3|sfo1|sgp1|tor1)
+    ams2|ams3|blr1|fra1|lon1|nyc1|nyc2|nyc3|sfo1|sfo2|sgp1|tor1)
     region="$key"
     ;;
     *)
@@ -197,7 +197,7 @@ keyID=$(cat ~/.tugboat | grep ssh_key: | sed -e "s/.*ssh_key://" -e "s/'//g")
 
 if [[ -z "$(tugboat droplets | grep tugshuttle-to-$region)" ]]
 then
-    tugboat create -r $region -s 512mb -i ubuntu-14-04-x64 -k $keyID tugshuttle-to-$region
+    tugboat create tugshuttle-to-$region -r $region -s 512mb -i ubuntu-14-04-x64 -k $keyID
 else
     printf "\nExisting Droplet found in $region. Using that one...\n"
 fi
